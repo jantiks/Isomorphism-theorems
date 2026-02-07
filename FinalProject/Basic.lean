@@ -40,9 +40,10 @@ def kerRel {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra
 -- prove it step by step, first that it is a equivalence relation
 def kernelIsEquivalence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) : Equivalence (kerRel h) where
-  refl x := rfl
+  refl _ := rfl
   symm hxy := hxy.symm
   trans hxy hyz := hxy.trans hyz
+
 
 def kernelCongurence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) : Congruence σ algA where
@@ -50,17 +51,8 @@ def kernelCongurence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB
   equiv := kernelIsEquivalence h
   compatible := by
     intro f args1 args2 h_args
-    -- Goal: h (algA.interpret f args1) = h (algA.interpret f args2)
-    -- Unfold kerRel in the hypothesis so it's easier to use
-    dsimp [kerRel] at h_args
-
-    -- Apply the homomorphism property to rewrite the LHS and RHS
-    rw [h.map_op f args1, h.map_op f args2]
-
-    -- Current Goal: algB.interpret f (fun i => h (args1 i)) = algB.interpret f (fun i => h (args2 i))
-    -- We use 'congrArg' on the interpretation function itself
-    apply congrArg (algB.interpret f)
-
-    -- Now the goal is: (fun i => h (args1 i)) = (fun i => h (args2 i))
+    simp [kerRel] at *
+    rw [h.map_op, h.map_op]
+    congr 1
     funext i
     exact h_args i
