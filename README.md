@@ -1,13 +1,42 @@
-# final_project
+# Lean Final Project: Quotients and Homomorphisms in Universal Algebra
 
-## GitHub configuration
+## Overview
 
-To set up your new GitHub repository, follow these steps:
+This project formalizes a well known result from **universal algebra** in the Lean proof assistant:
 
-* Under your repository name, click **Settings**.
-* In the **Actions** section of the sidebar, click "General".
-* Check the box **Allow GitHub Actions to create and approve pull requests**.
-* Click the **Pages** section of the settings sidebar.
-* In the **Source** dropdown menu, select "GitHub Actions".
+> Let \( A \) and \( B \) be two algebras of the same signature and let \( f : A \to B \)
+> be a **surjective homomorphism**, then the quotient algebra \( A / \ker(f) \) is **isomorphic** to \( B \).
 
-After following the steps above, you can remove this section from the README file.
+The development is carried out in a general algebraic setting (with arbitrary signatures), then the result is 
+demonstrated on two concrete groups.
+
+---
+
+## Main Result
+
+Let:
+- \( A \), \( B \) be algebras over the same signature,
+- \( f : A \to B \) be a surjective homomorphism.
+
+Then the project formalizes the proof that:
+\[
+A / \ker(f) \cong B
+\]
+
+---
+
+## File Structure
+
+- **`FinalProject/UniversalAlgebra.lean`**  
+  Contains the main formalization part.
+
+- **`FinalProject.lean`**  
+  Example application on additive group \( (\mathbb{R}, +) \),
+  and multiplicative group \( (\mathbb{R}^+, \cdot) \).
+  
+---
+
+## Dependencies
+
+- Lean 4
+- Mathlib
