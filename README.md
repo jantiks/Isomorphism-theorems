@@ -15,13 +15,10 @@ demonstrated on two concrete groups.
 ## Main Result
 
 Let:
-- \( A \), \( B \) be algebras over the same signature,
-- \( f : A \to B \) be a surjective homomorphism.
+- $A$, $B$ be algebras over the same signature,
+- $f : A \to B$ be a surjective homomorphism.
 
-Then the project formalizes the proof that:
-\[
-A / \ker(f) \cong B
-\]
+Then the project formalizes the proof that $A / \ker(f) \cong B$
 
 ---
 
@@ -31,8 +28,8 @@ A / \ker(f) \cong B
   Contains the main formalization part.
 
 - **`FinalProject.lean`**  
-  Example application on additive group \( (\mathbb{R}, +) \),
-  and multiplicative group \( (\mathbb{R}^+, \cdot) \).
+  Example application on additive group $(\mathbb{R}, +)$,
+  and multiplicative group $(\mathbb{R}^+, \cdot)$.
   
 ---
 
