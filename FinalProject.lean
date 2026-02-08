@@ -2,12 +2,13 @@
 -- namely I will show that (ℝ, +) ≅ (ℝ^{+}, *), where ℝ^{+} = ℝ \ {x ∈ ℝ : x < 0}, and * is the usual multiplication.
 --
 
-import FinalProject.Basic
+import FinalProject.UniversalAlgebra
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Data.Real.Basic
 
-
+-- First, I define the group signature, then give to the corresponding algebras
+-- the same group signature.
 inductive GroupOp
   | mul | inv | one
 
@@ -47,6 +48,12 @@ noncomputable def RealMulAlgebra : UniversalAlgebra.Algebra GroupSignature PosRe
       ⟨x.val⁻¹, inv_pos.mpr x.property⟩
     | .one =>
       ⟨1, one_pos⟩
+
+
+-- Strictly speaking I am going to prove the isomorphism between two algebras,
+-- rather than groups since I only defined the signature of a group, and didn't
+-- explicitly define axioms for it, although I proved those axioms in the individual
+-- algebras RealAddAlgebra and RealMulAlgebra
 
 noncomputable def expHom :
 UniversalAlgebra.Homomorphism GroupSignature RealAddAlgebra RealMulAlgebra where
