@@ -1,12 +1,15 @@
 -- This file contains a formalization of the First isomorphism (in Universal algebra) thoerem.
 -- First, I want to defie an algebra, for that we start with the definition of a signature
+
+import Mathlib.Data.Quot
+
 universe u v
 
 structure Signature where
   Op : Type u
   arity : Op → ℕ
 
--- Now, an algebra with a signature sigma, and ground set A is the interpretations of the functions
+-- Now, an algebra with a signature \sigma, and ground set A is the interpretations of the functions
 -- from the signature, with corresponding arities
 structure Algebra (σ : Signature) (A : Type v) where
   interpret : (f : σ.Op) → (Fin (σ.arity f) → A) → A
@@ -25,6 +28,11 @@ instance (σ : Signature) {A B : Type _} (algA : Algebra σ A) (algB : Algebra �
 -- basically Binary relation takes two arguments and returns Ture or False value.
 def BinRelation (A : Type u) := A → A → Prop
 
+-- Congurence here is just an equivalence relation on A that also is closed under the basic opeartions
+-- of A, or in other words congurence is a subalgebra of A^2, but I don't want to define
+-- a subalgebra and powers of an algebra, since it can get tricky with infinte products
+-- (at least that's what I think), so will stick with equiv rel + closoure
+-- under the operations definition.
 structure Congruence (σ : Signature) {A : Type u} (alg : Algebra σ A) where
   toRel : BinRelation A -- the underlying binary relation
   equiv : Equivalence toRel -- proof that it is an equivalence relation
@@ -36,7 +44,7 @@ def kerRel {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra
   (h : Homomorphism σ algA algB) : BinRelation A :=
   fun x y => h x = h y
 
--- since kernel if a homomorphism A -> B is actually a congurence relation on the domain algebra A, I will
+-- since kernel of a homomorphism A -> B is actually a congurence relation on the domain algebra A, I will
 -- prove it step by step, first that it is a equivalence relation
 def kernelIsEquivalence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) : Equivalence (kerRel h) where
@@ -56,3 +64,36 @@ def kernelCongurence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB
     congr 1
     funext i
     exact h_args i
+
+-- using the Lean's Setoid machinary
+instance quotientSetoid {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congruence σ alg) : Setoid A where
+  r := Φ.toRel
+  iseqv := Φ.equiv
+
+-- We use Quotient.choice to pick representatives, but the 'compatible' property
+-- ensures the final result is independent of the choice.
+-- Here I use noncomputable since Quotient.choice is noncomputable, since it depends on AOC
+noncomputable def QuotientAlgebra {σ : Signature} {A : Type u} (alg : Algebra σ A) (Φ : Congruence σ alg) :
+    Algebra σ (Quotient (quotientSetoid Φ)) where
+  interpret f args :=
+    Quotient.lift (fun (v : Fin (σ.arity f) → A) => Quotient.mk (quotientSetoid Φ) (alg.interpret f v))
+      (by
+        intro v1 v2 h_equiv
+        apply Quotient.sound
+        apply Φ.compatible
+        intro i
+        exact h_equiv i
+      )
+      (Quotient.choice args)
+
+-- lets define the canonical homomorphism. i.e. f a = class(a), since the quotient is well defined, this
+-- is a homomorphism, which sends each element to its equivalence class.
+def naturalProjection {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congruence σ alg) :
+    Homomorphism σ alg (QuotientAlgebra alg Φ) where
+  toFun := Quotient.mk (quotientSetoid Φ)
+  map_op f args := by
+    simp [QuotientAlgebra]
+    rw [Quotient.lift]
+    rw [Quotient.choice]
+    rw [Quotient.mk]
+    rw [Quotient.mk]
