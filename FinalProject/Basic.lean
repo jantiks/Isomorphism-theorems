@@ -7,6 +7,8 @@
 import Mathlib.Data.Quot
 import Mathlib.Logic.Function.Basic
 
+namespace UniversalAlgebra
+
 universe u v
 
 structure Signature where
@@ -156,7 +158,7 @@ theorem inducedInjective {σ : Signature} {A B : Type _} {algA : Algebra σ A} {
   apply Quotient.sound
   exact heq
 
-def first_isomorphism_construction {σ : Signature} {A B : Type _}
+def firstIsomorphismConstruction {σ : Signature} {A B : Type _}
   {algA : Algebra σ A} {algB : Algebra σ B} (h : Homomorphism σ algA algB)
   (h_surj : Function.Surjective h) :
   Isomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB := {
@@ -170,8 +172,27 @@ def first_isomorphism_construction {σ : Signature} {A B : Type _}
     ⟩
   }
 
-theorem first_isomorphism_theorem {σ : Signature} {A B : Type _}
+theorem firstIsomorphismTheorem {σ : Signature} {A B : Type _}
   {algA : Algebra σ A} {algB : Algebra σ B} (h : Homomorphism σ algA algB)
   (h_surj : Function.Surjective h) :
   Nonempty (Isomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB) :=
-  ⟨first_isomorphism_construction h h_surj⟩
+  ⟨firstIsomorphismConstruction h h_surj⟩
+
+
+
+-- Now, lets use the theorem to show that for any algebra A, A/Ker(id) is isomorphic to A.
+def idHomomorphism {σ : Signature} {A : Type u} (alg : Algebra σ A) :
+    Homomorphism σ alg alg where
+  toFun := id
+  mapOp f args := rfl
+
+theorem idSurjective {A : Type u} : Function.Surjective (@id A) := by
+  intro y
+  use y
+  rfl
+
+theorem quotientIdIsomorphic {σ : Signature} {A : Type u} (alg : Algebra σ A) :
+    Nonempty (Isomorphism σ (QuotientAlgebra alg (kernelCongurence (idHomomorphism alg))) alg) :=
+  firstIsomorphismTheorem (idHomomorphism alg) idSurjective
+
+end UniversalAlgebra
