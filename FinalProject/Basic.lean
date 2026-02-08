@@ -1,4 +1,5 @@
 -- This file contains a formalization of the First isomorphism (in Universal algebra) thoerem.
+-- The theorem is as follows:
 -- First, I want to defie an algebra, for that we start with the definition of a signature
 
 import Mathlib.Data.Quot
@@ -18,8 +19,12 @@ structure Algebra (σ : Signature) (A : Type v) where
 structure Homomorphism (σ : Signature) {A B : Type _}
   (algA : Algebra σ A) (algB : Algebra σ B) where
   toFun : A → B
-  map_op : ∀ (f : σ.Op) (args : Fin (σ.arity f) → A),
+  mapOp : ∀ (f : σ.Op) (args : Fin (σ.arity f) → A),
     toFun (algA.interpret f args) = algB.interpret f (toFun ∘ args)
+
+structure Isomorphism (σ : Signature) (algA : Algebra σ A) (algB : Algebra σ B)
+extends Homomorphism σ algA algB where
+  bijective : Function.Bijective toFun
 
 -- This is just a syntactic sugar, to not write h.toFun x but h x when h is a homomorphism
 instance (σ : Signature) {A B : Type _} (algA : Algebra σ A) (algB : Algebra σ B) :
@@ -61,7 +66,7 @@ def kernelCongurence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB
   compatible := by
     intro f args1 args2 h_args
     simp [kerRel] at *
-    rw [h.map_op, h.map_op]
+    rw [h.mapOp, h.mapOp]
     congr 1
     funext i
     exact h_args i
@@ -79,11 +84,11 @@ noncomputable def QuotientAlgebra {σ : Signature} {A : Type u} (alg : Algebra �
   interpret f args :=
     Quotient.lift (fun (v : Fin (σ.arity f) → A) => Quotient.mk (quotientSetoid Φ) (alg.interpret f v))
       (by
-        intro v1 v2 h_equiv
+        intro v1 v2 hEquiv
         apply Quotient.sound
         apply Φ.compatible
         intro i
-        exact h_equiv i
+        exact hEquiv i
       )
       (Quotient.choice args)
 
@@ -92,7 +97,7 @@ noncomputable def QuotientAlgebra {σ : Signature} {A : Type u} (alg : Algebra �
 def quotientMap {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congruence σ alg) :
     Homomorphism σ alg (QuotientAlgebra alg Φ) where
   toFun := Quotient.mk (quotientSetoid Φ)
-  map_op f args := by
+  mapOp f args := by
     simp [QuotientAlgebra]
     apply Quotient.sound
     apply Φ.compatible
@@ -102,6 +107,8 @@ def quotientMap {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congrue
     symm
     apply Quotient.out_eq
 
+-- now, I want to defined the induced homomorphism form h : A -> B to h' : A/ker(h) -> B as f([a]) -> f(a) ∈ B,
+-- First, I just define the induced function, and then prove that it is a homomorphism.
 def inducedFun {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) : Quotient (quotientSetoid (kernelCongurence h)) → B :=
   Quotient.lift h (fun _ _ h_eq => h_eq)
@@ -110,28 +117,37 @@ noncomputable def inducedHomomorphism {σ : Signature} {A B : Type _} {algA : Al
   (h : Homomorphism σ algA algB) :
   Homomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB where
   toFun := inducedFun h
-  map_op := by
+  mapOp := by
     intro f args
-    let q_map := quotientMap (kernelCongurence h)
 
-    have h_link : ∀ a, inducedFun h (q_map a) = h a := by
+    let qMap := quotientMap (kernelCongurence h)
+    have hLink : ∀ a, inducedFun h (qMap a) = h a := by
       intro a; rfl
 
     let v : Fin (σ.arity f) → A := fun i => (args i).out
-
-    have h_args : args = q_map ∘ v := by
+    have h_args : args = qMap ∘ v := by
       funext i
-      dsimp [q_map, quotientMap]
+      dsimp [qMap, quotientMap]
       rw [Quotient.out_eq]
 
     rw [h_args]
-    rw [← q_map.map_op]
-    rw [h_link]
+    rw [← qMap.mapOp]
+    rw [hLink]
 
-    rw [h.map_op]
+    rw [h.mapOp]
     apply congr
     rfl
 
     funext i
     dsimp [Function.comp]
-    rw [h_link]
+    rw [hLink]
+
+theorem induced_injective {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
+  (h : Homomorphism σ algA algB) :
+  Function.Injective (inducedFun h) := by
+  intro q1 q2 heq
+  induction q1 using Quotient.inductionOn
+  induction q2 using Quotient.inductionOn
+
+  apply Quotient.sound
+  exact heq
