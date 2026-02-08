@@ -88,12 +88,15 @@ noncomputable def QuotientAlgebra {σ : Signature} {A : Type u} (alg : Algebra �
 
 -- lets define the canonical homomorphism. i.e. f a = class(a), since the quotient is well defined, this
 -- is a homomorphism, which sends each element to its equivalence class.
-def naturalProjection {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congruence σ alg) :
+def quotientMap {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congruence σ alg) :
     Homomorphism σ alg (QuotientAlgebra alg Φ) where
   toFun := Quotient.mk (quotientSetoid Φ)
   map_op f args := by
     simp [QuotientAlgebra]
-    rw [Quotient.lift]
-    rw [Quotient.choice]
-    rw [Quotient.mk]
-    rw [Quotient.mk]
+    apply Quotient.sound
+    apply Φ.compatible
+    intro i
+    change @Setoid.r _ (quotientSetoid Φ) (args i) _
+    apply Quotient.exact
+    symm
+    apply Quotient.out_eq
