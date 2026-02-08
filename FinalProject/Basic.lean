@@ -27,7 +27,8 @@ structure Homomorphism (σ : Signature) {A B : Type _}
   mapOp : ∀ (f : σ.Op) (args : Fin (σ.arity f) → A),
     toFun (algA.interpret f args) = algB.interpret f (toFun ∘ args)
 
--- Since we are proving a theorem which is about isomorphisms, we need to define isomorphism between algebras :)
+-- Since we are proving a theorem which is about isomorphisms,
+-- we need to define isomorphism between algebras :)
 structure Isomorphism (σ : Signature) (algA : Algebra σ A) (algB : Algebra σ B)
 extends Homomorphism σ algA algB where
   bijective : Function.Bijective toFun
@@ -40,11 +41,11 @@ instance (σ : Signature) {A B : Type _} (algA : Algebra σ A) (algB : Algebra �
 -- basically Binary relation takes two arguments and returns Ture or False value.
 def BinRelation (A : Type u) := A → A → Prop
 
--- Congurence here is just an equivalence relation on algebra A that also is closed under the basic opeartions
--- of A, or in other words congurence is a subalgebra of A^2, but I don't want to define
--- a subalgebra and powers of an algebra, since it can get tricky with infinte products
--- (at least that's what I think), so will stick with equiv rel + closoure
--- under the operations definition.
+-- Congurence here is just an equivalence relation on algebra A that also
+-- is closed under the basic opeartions of A, or in other words congurence is a subalgebra
+-- of A^2, but I don't want to define a subalgebra and powers of an algebra,
+-- since it can get tricky with infinte products (at least that's what I think),
+-- so will stick with equiv rel + closoure under the operations definition.
 structure Congruence (σ : Signature) {A : Type u} (alg : Algebra σ A) where
   toRel : BinRelation A -- the underlying binary relation
   equiv : Equivalence toRel -- proof that it is an equivalence relation
@@ -56,8 +57,9 @@ def kerRel {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra
   (h : Homomorphism σ algA algB) : BinRelation A :=
   fun x y => h x = h y
 
--- since kernel of a homomorphism A -> B is actually a congurence relation on the domain algebra A, I will
--- prove it step by step, first that it is a equivalence relation
+-- since kernel of a homomorphism A -> B is actually a congurence relation on
+-- the domain algebra A, I will prove it step by step,
+-- first that it is a equivalence relation
 def kernelIsEquivalence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) : Equivalence (kerRel h) where
   refl _ := rfl
@@ -71,24 +73,30 @@ def kernelCongurence {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB
   equiv := kernelIsEquivalence h
   compatible := by
     intro f args1 args2 h_args
-    simp [kerRel] at *
+    simp only [kerRel] at *
     rw [h.mapOp, h.mapOp]
     congr 1
     funext i
     exact h_args i
 
 -- using the Lean's Setoid machinary
-instance quotientSetoid {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congruence σ alg) : Setoid A where
+instance quotientSetoid
+{σ : Signature}
+{A : Type u}
+{alg : Algebra σ A}
+(Φ : Congruence σ alg) : Setoid A where
   r := Φ.toRel
   iseqv := Φ.equiv
 
 -- We use Quotient.choice to pick representatives, but the 'compatible' property
 -- ensures the final result is independent of the choice.
 -- Here I use noncomputable since Quotient.choice is noncomputable, since it depends on AOC
-noncomputable def QuotientAlgebra {σ : Signature} {A : Type u} (alg : Algebra σ A) (Φ : Congruence σ alg) :
+noncomputable def QuotientAlgebra {σ : Signature} {A : Type u}
+(alg : Algebra σ A) (Φ : Congruence σ alg) :
     Algebra σ (Quotient (quotientSetoid Φ)) where
   interpret f args :=
-    Quotient.lift (fun (v : Fin (σ.arity f) → A) => Quotient.mk (quotientSetoid Φ) (alg.interpret f v))
+    Quotient.lift (fun (v : Fin (σ.arity f) → A) =>
+    Quotient.mk (quotientSetoid Φ) (alg.interpret f v))
       (by
         intro v1 v2 hEquiv
         apply Quotient.sound
@@ -98,13 +106,14 @@ noncomputable def QuotientAlgebra {σ : Signature} {A : Type u} (alg : Algebra �
       )
       (Quotient.choice args)
 
--- lets define the canonical homomorphism. i.e. f a = class(a), since the quotient is well defined, this
--- is a homomorphism, which sends each element to its equivalence class.
+-- lets define the canonical homomorphism. i.e. f a = class(a), since
+-- the quotient is well defined, this is a homomorphism which
+-- sends each element to its equivalence class.
 def quotientMap {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congruence σ alg) :
     Homomorphism σ alg (QuotientAlgebra alg Φ) where
   toFun := Quotient.mk (quotientSetoid Φ)
   mapOp f args := by
-    simp [QuotientAlgebra]
+    simp only [QuotientAlgebra]
     apply Quotient.sound
     apply Φ.compatible
     intro i
@@ -113,7 +122,8 @@ def quotientMap {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congrue
     symm
     apply Quotient.out_eq
 
--- now, I want to defined the induced homomorphism form h : A -> B to h' : A/ker(h) -> B as f([a]) -> f(a) ∈ B,
+-- now, I want to define the induced homomorphism form
+-- h : A -> B to h' : A/ker(h) -> B as f([a]) -> f(a) ∈ B,
 -- First, I just define the induced function, and then prove that it is a homomorphism.
 def inducedFun {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) : Quotient (quotientSetoid (kernelCongurence h)) → B :=
@@ -125,37 +135,27 @@ def inducedHomomorphism {σ : Signature} {A B : Type _} {algA : Algebra σ A} {a
   toFun := inducedFun h
   mapOp := by
     intro f args
-
     let qMap := quotientMap (kernelCongurence h)
     have hLink : ∀ a, inducedFun h (qMap a) = h a := by
       intro a; rfl
-
     let v : Fin (σ.arity f) → A := fun i => (args i).out
     have hArgs : args = qMap ∘ v := by
       funext i
       dsimp [qMap, quotientMap]
       rw [Quotient.out_eq]
-
-    rw [hArgs]
-    rw [← qMap.mapOp]
-    rw [hLink]
-
-    rw [h.mapOp]
+    rw [hArgs, ← qMap.mapOp, hLink, h.mapOp]
     apply congr
-    rfl
-
-    funext i
-    dsimp [Function.comp]
-    rw [hLink]
+    · rfl
+    · funext i
+      dsimp [Function.comp]
+      rw [hLink]
 
 theorem inducedInjective {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) :
   Function.Injective (inducedFun h) := by
   intro q1 q2 heq
-
   induction q1 using Quotient.inductionOn
   induction q2 using Quotient.inductionOn
-
   apply Quotient.sound
   exact heq
 
@@ -179,13 +179,11 @@ theorem firstIsomorphismTheorem {σ : Signature} {A B : Type _}
   Nonempty (Isomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB) :=
   ⟨firstIsomorphismConstruction h h_surj⟩
 
-
-
 -- Now, lets use the theorem to show that for any algebra A, A/Ker(id) is isomorphic to A.
 def idHomomorphism {σ : Signature} {A : Type u} (alg : Algebra σ A) :
     Homomorphism σ alg alg where
   toFun := id
-  mapOp f args := rfl
+  mapOp _ _ := rfl
 
 theorem idSurjective {A : Type u} : Function.Surjective (@id A) := by
   intro y

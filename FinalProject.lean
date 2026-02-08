@@ -20,8 +20,8 @@ def GroupSignature : UniversalAlgebra.Signature where
   Op := GroupOp
   arity := groupArity
 
--- The Algebra (R, +)
-noncomputable def RealAddAlgebra : UniversalAlgebra.Algebra GroupSignature ℝ where
+-- The Algebra (ℝ, +)
+def RealAddAlgebra : UniversalAlgebra.Algebra GroupSignature ℝ where
   interpret op args :=
     match op with
     | .mul =>
@@ -32,7 +32,7 @@ noncomputable def RealAddAlgebra : UniversalAlgebra.Algebra GroupSignature ℝ w
       -(args ⟨0, by simp [GroupSignature, groupArity]⟩)
     | .one => 0
 
--- The Algebra (R+, *)
+-- The Algebra (ℝ^+, *)
 def PosReal := {x : ℝ // 0 < x}
 
 noncomputable def RealMulAlgebra : UniversalAlgebra.Algebra GroupSignature PosReal where
@@ -48,18 +48,25 @@ noncomputable def RealMulAlgebra : UniversalAlgebra.Algebra GroupSignature PosRe
     | .one =>
       ⟨1, one_pos⟩
 
-noncomputable def expHom : UniversalAlgebra.Homomorphism GroupSignature RealAddAlgebra RealMulAlgebra where
+noncomputable def expHom :
+UniversalAlgebra.Homomorphism GroupSignature RealAddAlgebra RealMulAlgebra where
   toFun x := ⟨Real.exp x, Real.exp_pos x⟩
-  mapOp op args := by
-  sorry
+  mapOp f args := by
+    cases f
+    · apply Subtype.ext
+      simp [RealMulAlgebra, RealAddAlgebra, Real.exp_add]
+    · apply Subtype.ext
+      simp only [RealMulAlgebra, RealAddAlgebra]
+      exact Real.exp_neg (args ⟨0, by simp [GroupSignature, groupArity]⟩)
+    · apply Subtype.ext
+      simp [RealMulAlgebra, RealAddAlgebra]
 
 lemma expSurjective : Function.Surjective expHom.toFun := by
   intro a
   use Real.log a.val
   apply Subtype.ext
-  simp [expHom]
+  simp only [expHom]
   apply Real.exp_log a.prop
-
 
 theorem RealIsomorphism :
     Nonempty (UniversalAlgebra.Isomorphism GroupSignature
