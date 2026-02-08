@@ -1,5 +1,7 @@
 -- This file contains a formalization of the First isomorphism (in Universal algebra) thoerem.
--- The theorem is as follows:
+-- The theorem I will prove above is as follows:
+-- Let A and B be algebras with same signature, let h : A -> B be a surjective homomorphism,
+-- then A / ker h is isomorphic to B.
 -- First, I want to defie an algebra, for that we start with the definition of a signature
 
 import Mathlib.Data.Quot
@@ -22,6 +24,7 @@ structure Homomorphism (σ : Signature) {A B : Type _}
   mapOp : ∀ (f : σ.Op) (args : Fin (σ.arity f) → A),
     toFun (algA.interpret f args) = algB.interpret f (toFun ∘ args)
 
+-- Since we are proving a theorem which is about isomorphisms, we need to define isomorphism between algebras :)
 structure Isomorphism (σ : Signature) (algA : Algebra σ A) (algB : Algebra σ B)
 extends Homomorphism σ algA algB where
   bijective : Function.Bijective toFun
@@ -34,7 +37,7 @@ instance (σ : Signature) {A B : Type _} (algA : Algebra σ A) (algB : Algebra �
 -- basically Binary relation takes two arguments and returns Ture or False value.
 def BinRelation (A : Type u) := A → A → Prop
 
--- Congurence here is just an equivalence relation on A that also is closed under the basic opeartions
+-- Congurence here is just an equivalence relation on algebra A that also is closed under the basic opeartions
 -- of A, or in other words congurence is a subalgebra of A^2, but I don't want to define
 -- a subalgebra and powers of an algebra, since it can get tricky with infinte products
 -- (at least that's what I think), so will stick with equiv rel + closoure
@@ -113,7 +116,7 @@ def inducedFun {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Alg
   (h : Homomorphism σ algA algB) : Quotient (quotientSetoid (kernelCongurence h)) → B :=
   Quotient.lift h (fun _ _ h_eq => h_eq)
 
-noncomputable def inducedHomomorphism {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
+def inducedHomomorphism {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) :
   Homomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB where
   toFun := inducedFun h
@@ -125,12 +128,12 @@ noncomputable def inducedHomomorphism {σ : Signature} {A B : Type _} {algA : Al
       intro a; rfl
 
     let v : Fin (σ.arity f) → A := fun i => (args i).out
-    have h_args : args = qMap ∘ v := by
+    have hArgs : args = qMap ∘ v := by
       funext i
       dsimp [qMap, quotientMap]
       rw [Quotient.out_eq]
 
-    rw [h_args]
+    rw [hArgs]
     rw [← qMap.mapOp]
     rw [hLink]
 
@@ -142,12 +145,33 @@ noncomputable def inducedHomomorphism {σ : Signature} {A B : Type _} {algA : Al
     dsimp [Function.comp]
     rw [hLink]
 
-theorem induced_injective {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
+theorem inducedInjective {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
   (h : Homomorphism σ algA algB) :
   Function.Injective (inducedFun h) := by
   intro q1 q2 heq
+
   induction q1 using Quotient.inductionOn
   induction q2 using Quotient.inductionOn
 
   apply Quotient.sound
   exact heq
+
+def first_isomorphism_construction {σ : Signature} {A B : Type _}
+  {algA : Algebra σ A} {algB : Algebra σ B} (h : Homomorphism σ algA algB)
+  (h_surj : Function.Surjective h) :
+  Isomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB := {
+    toFun := inducedFun h,
+    mapOp := (inducedHomomorphism h).mapOp,
+    bijective := ⟨inducedInjective h, by
+      intro b
+      obtain ⟨a, ha⟩ := h_surj b
+      use Quotient.mk (quotientSetoid (kernelCongurence h)) a
+      exact ha
+    ⟩
+  }
+
+theorem first_isomorphism_theorem {σ : Signature} {A B : Type _}
+  {algA : Algebra σ A} {algB : Algebra σ B} (h : Homomorphism σ algA algB)
+  (h_surj : Function.Surjective h) :
+  Nonempty (Isomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB) :=
+  ⟨first_isomorphism_construction h h_surj⟩
