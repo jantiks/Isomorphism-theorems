@@ -6,6 +6,7 @@
 
 import Mathlib.Data.Quot
 import Mathlib.Logic.Function.Basic
+import Mathlib.Data.Real.Basic
 
 namespace UniversalAlgebra
 
