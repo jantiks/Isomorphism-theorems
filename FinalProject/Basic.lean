@@ -2,6 +2,7 @@
 -- First, I want to defie an algebra, for that we start with the definition of a signature
 
 import Mathlib.Data.Quot
+import Mathlib.Logic.Function.Basic
 
 universe u v
 
@@ -100,3 +101,37 @@ def quotientMap {σ : Signature} {A : Type u} {alg : Algebra σ A} (Φ : Congrue
     apply Quotient.exact
     symm
     apply Quotient.out_eq
+
+def inducedFun {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
+  (h : Homomorphism σ algA algB) : Quotient (quotientSetoid (kernelCongurence h)) → B :=
+  Quotient.lift h (fun _ _ h_eq => h_eq)
+
+noncomputable def inducedHomomorphism {σ : Signature} {A B : Type _} {algA : Algebra σ A} {algB : Algebra σ B}
+  (h : Homomorphism σ algA algB) :
+  Homomorphism σ (QuotientAlgebra algA (kernelCongurence h)) algB where
+  toFun := inducedFun h
+  map_op := by
+    intro f args
+    let q_map := quotientMap (kernelCongurence h)
+
+    have h_link : ∀ a, inducedFun h (q_map a) = h a := by
+      intro a; rfl
+
+    let v : Fin (σ.arity f) → A := fun i => (args i).out
+
+    have h_args : args = q_map ∘ v := by
+      funext i
+      dsimp [q_map, quotientMap]
+      rw [Quotient.out_eq]
+
+    rw [h_args]
+    rw [← q_map.map_op]
+    rw [h_link]
+
+    rw [h.map_op]
+    apply congr
+    rfl
+
+    funext i
+    dsimp [Function.comp]
+    rw [h_link]
