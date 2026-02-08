@@ -4,6 +4,7 @@
 
 import FinalProject.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Data.Real.Basic
 
 
@@ -24,7 +25,6 @@ noncomputable def RealAddAlgebra : UniversalAlgebra.Algebra GroupSignature ℝ w
   interpret op args :=
     match op with
     | .mul =>
-      -- We explicitly tell Lean what the arity is in this branch
       let a0 : ℝ := args ⟨0, by simp [GroupSignature, groupArity]⟩
       let a1 : ℝ := args ⟨1, by simp [GroupSignature, groupArity]⟩
       a0 + a1
@@ -53,8 +53,13 @@ noncomputable def expHom : UniversalAlgebra.Homomorphism GroupSignature RealAddA
   mapOp op args := by
   sorry
 
-theorem expSurjective : Function.Surjective expHom.toFun := by
-  sorry
+lemma expSurjective : Function.Surjective expHom.toFun := by
+  intro a
+  use Real.log a.val
+  apply Subtype.ext
+  simp [expHom]
+  apply Real.exp_log a.prop
+
 
 theorem RealIsomorphism :
     Nonempty (UniversalAlgebra.Isomorphism GroupSignature
