@@ -4,8 +4,8 @@
 
 This project formalizes a well known result from **universal algebra** in the Lean proof assistant:
 
-> Let \( A \) and \( B \) be two algebras of the same signature and let \( f : A \to B \)
-> be a **surjective homomorphism**, then the quotient algebra \( A / \ker(f) \) is **isomorphic** to \( B \).
+> Let $A$ and $B$ be two algebras of the same signature and let $f : A \to B $
+> be a **surjective homomorphism**, then the quotient algebra $A / \ker(f)$ is **isomorphic** to $B$.
 
 The development is carried out in a general algebraic setting (with arbitrary signatures), then the result is 
 demonstrated on two concrete groups.
